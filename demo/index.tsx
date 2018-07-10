@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import OneCron from "../src";
+import OneCron, { I18NEnum } from "../src";
 import "./index.css";
 
 type State = {};
@@ -8,14 +8,14 @@ type State = {};
 class App extends React.Component<any, State> {
   state: State = {};
   handleChange(exp) {
-    console.log(exp, exp.format());
+    console.log(exp, exp.format(), exp.recent5TriggerTimes());
   }
   render() {
     return (
       <div style={{ margin: 50 }}>
         <OneCron
           showCheckbox={true}
-          lang="Chinese"
+          lang={I18NEnum.Chinese}
           onChange={exp => this.handleChange(exp)}
           cronExpression="0 0 2 * * ?"
         />

@@ -194,6 +194,21 @@ export class DayCron extends Cron {
     return `0 ${time.minutes()} ${time.hours()} * * ?`;
   }
 
+  recent5TriggerTimes() {
+    const time = this.time;
+    let trggerTimes = [] as string[];
+    let start: number = time.isAfter(Moment()) ? 0 : 1;
+
+    for (let i = start; i < start + 5; i++) {
+      trggerTimes.push(
+        `${Moment()
+          .add("days", i)
+          .format("YYYY-MM-DD")} ${time.format("HH:mm")}`
+      );
+    }
+    return trggerTimes;
+  }
+
   constructor(cron: Partial<DayCron>) {
     super();
     this.init(cron);
@@ -212,6 +227,35 @@ class MonthCron extends Cron {
     return `0 ${time.minutes()} ${time.hours()} ${days.join(",")} * * ?`;
   }
 
+  recent5TriggerTimes() {
+    const { days, time } = this;
+    let trggerTimes = [] as string[];
+    let month: number = time.month() + 1;
+    let year: number = time.year();
+    let sortedDays: string[] = days.sort((a: any, b: any) => a - b);
+
+    while (days.length >= 1 && trggerTimes.length < 5) {
+      let monthFormat: string = _.padStart(month, 2, "0");
+
+      for (let value of sortedDays) {
+        let dateFormate: string = _.padStart(value, 2, "0");
+        let str = `${year}-${monthFormat}-${dateFormate} ${time.format(
+          "HH:mm"
+        )}`;
+        if (Moment(str).isValid() && Moment(str).isAfter(Moment())) {
+          trggerTimes.push(Moment(str).format("YYYY-MM-DD HH:mm"));
+        }
+        if (trggerTimes.length >= 5) break;
+      }
+      month++;
+      let isNextYear: boolean = month > 12 ? true : false;
+      year = isNextYear ? year + 1 : year;
+      month = isNextYear ? month % 12 : month;
+    }
+
+    return trggerTimes;
+  }
+
   constructor(cron: Partial<MonthCron>) {
     super();
     this.init(cron);
@@ -228,6 +272,31 @@ class WeekCron extends Cron {
     const { weeks, time } = this;
 
     return `0 ${time.minutes()} ${time.hours()} ? * ${weeks.join(",")}`;
+  }
+
+  recent5TriggerTimes() {
+    const { weeks, time } = this;
+    let trggerTimes = [] as string[];
+    let todayToWeek: number = Moment().weekday() + 1;
+    let sortedWeeks: string[] = weeks.sort((a: any, b: any) => a - b);
+    let baseDays = 0;
+
+    while (weeks.length >= 1 && trggerTimes.length < 5) {
+      for (let week of sortedWeeks) {
+        let days: number = parseInt(week) + baseDays - todayToWeek;
+        let nextDateStr: string = `${Moment()
+          .add("days", days)
+          .format("YYYY-MM-DD")} ${time.format("HH:mm")}`;
+        let nextDate = Moment(nextDateStr);
+        if (days >= 0 && nextDate.isAfter(Moment())) {
+          trggerTimes.push(nextDateStr);
+        }
+        if (trggerTimes.length >= 5) break;
+      }
+      baseDays += 7;
+    }
+
+    return trggerTimes;
   }
 
   constructor(cron: Partial<WeekCron>) {
@@ -256,6 +325,10 @@ class HourCron extends Cron {
     }
   }
 
+  recent5TriggerTimes() {
+    const { hasInterval, beginTime, endTime, hours, stepHour } = this;
+  }
+
   constructor(cron: Partial<HourCron>) {
     super();
     this.init(cron);
@@ -273,6 +346,10 @@ class MinuteCron extends Cron {
     const { beginTime, endTime, stepMinute } = this;
 
     return `0 ${beginTime.minutes()}/${stepMinute} ${beginTime.hours()}-${endTime.hours()} * * ?`;
+  }
+
+  recent5TriggerTimes() {
+    const { beginTime, endTime, stepMinute } = this;
   }
 
   constructor(cron: Partial<MinuteCron>) {
